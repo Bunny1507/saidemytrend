@@ -45,7 +45,7 @@ pipeline {
 
                     def server = Artifactory.newServer(
                         url: registry + "/artifactory",
-                        credentialsId: "/****** (JfrogToken)"
+                        credentialsId: "JfrogToken"
                     )
 
                     def properties = "buildid=${env.BUILD_ID}"
