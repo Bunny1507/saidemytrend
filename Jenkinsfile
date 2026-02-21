@@ -1,5 +1,5 @@
 // Define the URL of the Artifactory registry
-def registry =' https://trialangzfu.jfrog.io/'
+def registry ='https://trialangzfu.jfrog.io/'
 
 pipeline {
     agent any
