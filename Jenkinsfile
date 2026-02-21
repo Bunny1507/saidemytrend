@@ -1,5 +1,5 @@
 // Define the URL of the Artifactory registry
-def registry = 'https://trial1zy574.jfrog.io/'
+def registry = 'https://trial1zy574.jfrog.io'
 
 pipeline {
     agent any
@@ -13,7 +13,7 @@ pipeline {
         stage("build") {
             steps {
                 echo "----------- build started ----------"
-                sh 'mvn clean deploy -Dmaven.test.skip=true'
+                sh 'mvn clean package -DskipTests'
                 echo "----------- build completed ----------"
             }
         }
@@ -21,7 +21,7 @@ pipeline {
         stage("test") {
             steps {
                 echo "----------- unit test started ----------"
-                sh 'mvn surefire-report:report'
+                sh 'mvn test'
                 echo "----------- unit test completed ----------"
             }
         }
@@ -42,27 +42,31 @@ pipeline {
             steps {
                 script {
                     echo '<--------------- Jar Publish Started --------------->'
-                    def server = Artifactory.newServer url: registry + "/artifactory", credentialsId: "JfrogToken"
-                    def properties = "buildid=${env.BUILD_ID},commitid=${GIT_COMMIT}"
+
+                    def server = Artifactory.newServer(
+                        url: registry + "/artifactory",
+                        credentialsId: "JfrogToken"
+                    )
+
+                    def properties = "buildid=${env.BUILD_ID}"
+
                     def uploadSpec = """{
-                          "files": [
+                        "files": [
                             {
-                              "pattern": "jarstaging/(*)",
-                              "target": "manidemy-libs-release-local/{1}",
-                              "flat": "false",
-                              "props": "${properties}",
-                              "exclusions": [ "*.sha1", "*.md5"]
+                                "pattern": "target/*.jar",
+                                "target": "manidemy-libs-release-local/",
+                                "flat": "true",
+                                "props": "${properties}"
                             }
-                         ]
-                     }"""
+                        ]
+                    }"""
+
                     def buildInfo = server.upload(uploadSpec)
-                    buildInfo.env.collect()
                     server.publishBuildInfo(buildInfo)
+
                     echo '<--------------- Jar Publish Ended --------------->'
                 }
             }
         }
-
     }
 }
-
